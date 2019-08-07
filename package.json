@@ -1,6 +1,6 @@
 {
   "name": "@author.io/element-draggable",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "author-draggable custom element (web component).",
   "main": "dist/author-draggable.min.js",
   "scripts": {
