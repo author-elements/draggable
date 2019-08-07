@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
 // @author.io/element-draggable v1.0.0 available at github.com/author-elements/draggable
-// Last Build: 7/29/2019, 8:47:30 PM
+// Last Build: 8/7/2019, 12:12:39 PM
 var AuthorDraggableElement = (function () {
   'use strict';
 
@@ -163,7 +163,11 @@ var AuthorDraggableElement = (function () {
           detail.originalEvent = evt;
 
           if (!this.PRIVATE.pointerEventsSupported) {
-            this.emit(newEvtName, detail, target);
+            this.emit({
+              name: newEvtName,
+              detail,
+              target
+            });
           }
         },
 
@@ -209,15 +213,17 @@ var AuthorDraggableElement = (function () {
         },
 
         pointerupHandler: evt => {
-          let dragendEvent = new CustomEvent('drag.end', this.PRIVATE.getEventData(evt, {
-            drag: {
-              distance: this.PRIVATE.getDragDistance(evt),
-              duration: evt.timeStamp - this.PRIVATE.initialTimestamp
-            },
-            position: this.PRIVATE.getPointerPosition(evt, false)
-          }));
+          this.emit({
+            name: 'drag.end',
+            detail: this.PRIVATE.getEventData(evt, {
+              drag: {
+                distance: this.PRIVATE.getDragDistance(evt),
+                duration: evt.timeStamp - this.PRIVATE.initialTimestamp
+              },
+              position: this.PRIVATE.getPointerPosition(evt, false)
+            })
+          });
 
-          this.emit(dragendEvent);
           this.PRIVATE.reset();
         },
 
@@ -342,11 +348,12 @@ var AuthorDraggableElement = (function () {
               this.PRIVATE.initializeClone();
             }
 
-            let dragstartEvent = new CustomEvent('drag.start', this.PRIVATE.getEventData(evt, {
-              position: this.PRIVATE.getPointerPosition(evt)
-            }));
-
-            this.emit(dragstartEvent);
+            let dragstartEvent = this.emit({
+              name: 'drag.start',
+              detail: this.PRIVATE.getEventData(evt, {
+                position: this.PRIVATE.getPointerPosition(evt)
+              })
+            });
 
             if (dragstartEvent.defaultPrevented) {
               return
@@ -355,16 +362,17 @@ var AuthorDraggableElement = (function () {
             this.PRIVATE.initiateDrag();
           }
 
-          let dragEvent = new CustomEvent('drag', this.PRIVATE.getEventData(evt, {
-            canDrop: this.PRIVATE.canDrop,
-            drag: {
-              distance: this.PRIVATE.getDragDistance(evt),
-              duration: evt.timeStamp - this.PRIVATE.initialTimestamp
-            },
-            position: this.PRIVATE.getPointerPosition(evt, false)
-          }));
-
-          this.emit(dragEvent);
+          let dragEvent = this.emit({
+            name: 'drag',
+            detail: this.PRIVATE.getEventData(evt, {
+              canDrop: this.PRIVATE.canDrop,
+              drag: {
+                distance: this.PRIVATE.getDragDistance(evt),
+                duration: evt.timeStamp - this.PRIVATE.initialTimestamp
+              },
+              position: this.PRIVATE.getPointerPosition(evt, false)
+            })
+          });
 
           if (dragEvent.defaultPrevented) {
             return
@@ -405,10 +413,15 @@ var AuthorDraggableElement = (function () {
           this.on('handshake.accepted', this.PRIVATE.handshakeAcceptedHandler);
 
           for (let dropTarget of allDropTargets) {
-            this.emit('handshake.offered', {
-              draggable: this,
-              types: this.PRIVATE.types
-            }, dropTarget);
+            this.emit({
+              name: 'handshake.offered',
+              detail: {
+                draggable: this,
+                types: this.PRIVATE.types
+              },
+
+              target: dropTarget
+            });
           }
 
           this.off('handshake.accepted', this.PRIVATE.handshakeHandler);
@@ -476,9 +489,14 @@ var AuthorDraggableElement = (function () {
         connected: () => {
           this.UTIL.insertStyleRule('dragging', ':host {}');
 
-          this.emit('author-draggable.connected', {
-            draggable: this
-          }, window);
+          this.emit({
+            name: 'author-draggable.connected',
+            detail: {
+              draggable: this
+            },
+
+            target: window
+          });
         },
 
         mousedown: evt => {

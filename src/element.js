@@ -146,7 +146,11 @@ class AuthorDraggableElement extends AuthorBaseElement(HTMLElement) {
         detail.originalEvent = evt
 
         if (!this.PRIVATE.pointerEventsSupported) {
-          this.emit(newEvtName, detail, target)
+          this.emit({
+            name: newEvtName,
+            detail,
+            target
+          })
         }
       },
 
@@ -192,15 +196,17 @@ class AuthorDraggableElement extends AuthorBaseElement(HTMLElement) {
       },
 
       pointerupHandler: evt => {
-        let dragendEvent = new CustomEvent('drag.end', this.PRIVATE.getEventData(evt, {
-          drag: {
-            distance: this.PRIVATE.getDragDistance(evt),
-            duration: evt.timeStamp - this.PRIVATE.initialTimestamp
-          },
-          position: this.PRIVATE.getPointerPosition(evt, false)
-        }))
+        this.emit({
+          name: 'drag.end',
+          detail: this.PRIVATE.getEventData(evt, {
+            drag: {
+              distance: this.PRIVATE.getDragDistance(evt),
+              duration: evt.timeStamp - this.PRIVATE.initialTimestamp
+            },
+            position: this.PRIVATE.getPointerPosition(evt, false)
+          })
+        })
 
-        this.emit(dragendEvent)
         this.PRIVATE.reset()
       },
 
@@ -325,11 +331,12 @@ class AuthorDraggableElement extends AuthorBaseElement(HTMLElement) {
             this.PRIVATE.initializeClone()
           }
 
-          let dragstartEvent = new CustomEvent('drag.start', this.PRIVATE.getEventData(evt, {
-            position: this.PRIVATE.getPointerPosition(evt)
-          }))
-
-          this.emit(dragstartEvent)
+          let dragstartEvent = this.emit({
+            name: 'drag.start',
+            detail: this.PRIVATE.getEventData(evt, {
+              position: this.PRIVATE.getPointerPosition(evt)
+            })
+          })
 
           if (dragstartEvent.defaultPrevented) {
             return
@@ -338,16 +345,17 @@ class AuthorDraggableElement extends AuthorBaseElement(HTMLElement) {
           this.PRIVATE.initiateDrag()
         }
 
-        let dragEvent = new CustomEvent('drag', this.PRIVATE.getEventData(evt, {
-          canDrop: this.PRIVATE.canDrop,
-          drag: {
-            distance: this.PRIVATE.getDragDistance(evt),
-            duration: evt.timeStamp - this.PRIVATE.initialTimestamp
-          },
-          position: this.PRIVATE.getPointerPosition(evt, false)
-        }))
-
-        this.emit(dragEvent)
+        let dragEvent = this.emit({
+          name: 'drag',
+          detail: this.PRIVATE.getEventData(evt, {
+            canDrop: this.PRIVATE.canDrop,
+            drag: {
+              distance: this.PRIVATE.getDragDistance(evt),
+              duration: evt.timeStamp - this.PRIVATE.initialTimestamp
+            },
+            position: this.PRIVATE.getPointerPosition(evt, false)
+          })
+        })
 
         if (dragEvent.defaultPrevented) {
           return
@@ -388,10 +396,15 @@ class AuthorDraggableElement extends AuthorBaseElement(HTMLElement) {
         this.on('handshake.accepted', this.PRIVATE.handshakeAcceptedHandler)
 
         for (let dropTarget of allDropTargets) {
-          this.emit('handshake.offered', {
-            draggable: this,
-            types: this.PRIVATE.types
-          }, dropTarget)
+          this.emit({
+            name: 'handshake.offered',
+            detail: {
+              draggable: this,
+              types: this.PRIVATE.types
+            },
+
+            target: dropTarget
+          })
         }
 
         this.off('handshake.accepted', this.PRIVATE.handshakeHandler)
@@ -459,9 +472,14 @@ class AuthorDraggableElement extends AuthorBaseElement(HTMLElement) {
       connected: () => {
         this.UTIL.insertStyleRule('dragging', ':host {}')
 
-        this.emit('author-draggable.connected', {
-          draggable: this
-        }, window)
+        this.emit({
+          name: 'author-draggable.connected',
+          detail: {
+            draggable: this
+          },
+
+          target: window
+        })
       },
 
       mousedown: evt => {

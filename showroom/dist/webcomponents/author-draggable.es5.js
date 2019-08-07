@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Author.io. MIT licensed.
 // @author.io/element-draggable v1.0.0 available at github.com/author-elements/draggable
-// Last Build: 7/29/2019, 8:47:30 PM
+// Last Build: 8/7/2019, 12:12:39 PM
 var AuthorDraggableElement = (function () {
   'use strict';
 
@@ -246,7 +246,11 @@ var AuthorDraggableElement = (function () {
           detail.originalEvent = evt;
 
           if (!_this.PRIVATE.pointerEventsSupported) {
-            _this.emit(newEvtName, detail, target);
+            _this.emit({
+              name: newEvtName,
+              detail: detail,
+              target: target
+            });
           }
         },
         // Polyfill for Firefox bug from 2002 :|
@@ -296,15 +300,16 @@ var AuthorDraggableElement = (function () {
           document.body.appendChild(_this.PRIVATE.clone);
         },
         pointerupHandler: function pointerupHandler(evt) {
-          var dragendEvent = new CustomEvent('drag.end', _this.PRIVATE.getEventData(evt, {
-            drag: {
-              distance: _this.PRIVATE.getDragDistance(evt),
-              duration: evt.timeStamp - _this.PRIVATE.initialTimestamp
-            },
-            position: _this.PRIVATE.getPointerPosition(evt, false)
-          }));
-
-          _this.emit(dragendEvent);
+          _this.emit({
+            name: 'drag.end',
+            detail: _this.PRIVATE.getEventData(evt, {
+              drag: {
+                distance: _this.PRIVATE.getDragDistance(evt),
+                duration: evt.timeStamp - _this.PRIVATE.initialTimestamp
+              },
+              position: _this.PRIVATE.getPointerPosition(evt, false)
+            })
+          });
 
           _this.PRIVATE.reset();
         },
@@ -420,11 +425,12 @@ var AuthorDraggableElement = (function () {
               _this.PRIVATE.initializeClone();
             }
 
-            var dragstartEvent = new CustomEvent('drag.start', _this.PRIVATE.getEventData(evt, {
-              position: _this.PRIVATE.getPointerPosition(evt)
-            }));
-
-            _this.emit(dragstartEvent);
+            var dragstartEvent = _this.emit({
+              name: 'drag.start',
+              detail: _this.PRIVATE.getEventData(evt, {
+                position: _this.PRIVATE.getPointerPosition(evt)
+              })
+            });
 
             if (dragstartEvent.defaultPrevented) {
               return;
@@ -433,16 +439,17 @@ var AuthorDraggableElement = (function () {
             _this.PRIVATE.initiateDrag();
           }
 
-          var dragEvent = new CustomEvent('drag', _this.PRIVATE.getEventData(evt, {
-            canDrop: _this.PRIVATE.canDrop,
-            drag: {
-              distance: _this.PRIVATE.getDragDistance(evt),
-              duration: evt.timeStamp - _this.PRIVATE.initialTimestamp
-            },
-            position: _this.PRIVATE.getPointerPosition(evt, false)
-          }));
-
-          _this.emit(dragEvent);
+          var dragEvent = _this.emit({
+            name: 'drag',
+            detail: _this.PRIVATE.getEventData(evt, {
+              canDrop: _this.PRIVATE.canDrop,
+              drag: {
+                distance: _this.PRIVATE.getDragDistance(evt),
+                duration: evt.timeStamp - _this.PRIVATE.initialTimestamp
+              },
+              position: _this.PRIVATE.getPointerPosition(evt, false)
+            })
+          });
 
           if (dragEvent.defaultPrevented) {
             return;
@@ -491,10 +498,14 @@ var AuthorDraggableElement = (function () {
             for (var _iterator2 = allDropTargets[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
               var dropTarget = _step2.value;
 
-              _this.emit('handshake.offered', {
-                draggable: _assertThisInitialized(_this),
-                types: _this.PRIVATE.types
-              }, dropTarget);
+              _this.emit({
+                name: 'handshake.offered',
+                detail: {
+                  draggable: _assertThisInitialized(_this),
+                  types: _this.PRIVATE.types
+                },
+                target: dropTarget
+              });
             }
           } catch (err) {
             _didIteratorError2 = true;
@@ -579,9 +590,13 @@ var AuthorDraggableElement = (function () {
         connected: function connected() {
           _this.UTIL.insertStyleRule('dragging', ':host {}');
 
-          _this.emit('author-draggable.connected', {
-            draggable: _assertThisInitialized(_this)
-          }, window);
+          _this.emit({
+            name: 'author-draggable.connected',
+            detail: {
+              draggable: _assertThisInitialized(_this)
+            },
+            target: window
+          });
         },
         mousedown: function mousedown(evt) {
           if (_this.PRIVATE.userIsTouching) {

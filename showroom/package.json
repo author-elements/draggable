@@ -16,7 +16,7 @@
     "productionline-web": "^1.1.8"
   },
   "dependencies": {
-    "@author.io/element-base": "^1.1.5",
+    "@author.io/element-base": "^1.2.0",
     "@author.io/element-control": "^1.1.1",
     "@author.io/element-menu": "^1.0.18",
     "@author.io/element-optgroup": "^1.0.1",
